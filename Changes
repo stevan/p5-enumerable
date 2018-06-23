@@ -1,0 +1,5 @@
+Revision history for Perl extension enumeration
+
+0.01
+    - Initial release of code based on the Moxie::Enum
+      module, but now extracted and without BEGIN::Lift
