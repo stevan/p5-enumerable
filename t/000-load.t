@@ -6,7 +6,7 @@ use warnings;
 use Test::More;
 
 BEGIN {
-    use_ok('enumeration');
+    use_ok('enumerable');
 }
 
 done_testing;

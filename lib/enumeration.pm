@@ -1,4 +1,4 @@
-package enumeration;
+package enumerable;
 # ABSTRACT: Yet Another Enum Generator
 
 use strict;

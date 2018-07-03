@@ -1,4 +1,4 @@
-# enumeration
+# enumerable
 
 Yet Another Enum Module
 
