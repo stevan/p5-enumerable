@@ -17,11 +17,15 @@ package Foo {
 }
 
 subtest '... checking array version' => sub {
-    can_ok('Foo', 'BAR');
-    can_ok('Foo', 'BAZ');
+    my $bar = Foo->Gorch->BAR;
+    my $baz = Foo->Gorch->BAZ;
 
-    my $bar = Foo->BAR;
-    my $baz = Foo->BAZ;
+    my $gorch = Foo->Gorch;
+    isa_ok($gorch, 'enumerable::enumeration');
+    can_ok($gorch, 'BAR');
+    can_ok($gorch, 'BAZ');
+
+    is($gorch->get_name, 'Gorch', '... got the expected name');
 
     is($bar+0, 1, '... got the expected numeric value for BAR');
     is($bar.'', 'BAR', '... got the expected string value for BAR');
@@ -29,27 +33,27 @@ subtest '... checking array version' => sub {
     is($baz+0, 2, '... got the expected numeric value for BAZ');
     is($baz.'', 'BAZ', '... got the expected string value for BAZ');
 
-    my %enum = enumerable::get_enum_for( Foo => 'Gorch' );
-    is(scalar keys %enum, 2, '... got the expected number of keys in the enum');
+    my $enum = enumerable::get_enum_for( Foo => 'Gorch' );
+    is($enum, $gorch, '... these are the same objects');
 
-    is($enum{BAR}, $bar, '... got the same value back');
-    is($enum{BAZ}, $baz, '... got the same value back');
+    ok($enum->has_value_for('BAR'), '... we have a BAR value');
+    ok($enum->has_value_for('BAZ'), '... we have a BAZ value');
+    ok(!$enum->has_value_for('BOO'), '... we do not have a BOO value');
 
-    ok(enumerable::has_value_for( Foo => 'Gorch', 'BAR' ), '... we have the value expected');
-    ok(enumerable::has_value_for( Foo => 'Gorch', 'BAZ' ), '... we have the value expected');
-    ok(!enumerable::has_value_for( Foo => 'Gorch', 'FOO' ), '... we do not have the value expected');
-
-    is(enumerable::get_value_for( Foo => 'Gorch', 'BAR' ), $bar, '... got the same value back');
-    is(enumerable::get_value_for( Foo => 'Gorch', 'BAZ' ), $baz, '... got the same value back');
+    is($enum->get_value_for('BAR'), 'BAR', '... we have a BAR value');
+    is($enum->get_value_for('BAZ'), 'BAZ', '... we have a BAZ value');
+    is($enum->get_value_for('BAR')+0, 1, '... we have a BAR value');
+    is($enum->get_value_for('BAZ')+0, 2, '... we have a BAZ value');
+    is($enum->get_value_for('BOO'), undef, '... we do not have a BOO value');
 
     is_deeply(
-        [ sort { $a cmp $b } enumerable::get_keys_for( Foo => 'Gorch' ) ],
+        [ sort { $a cmp $b } $gorch->get_keys ],
         [qw[ BAR BAZ ]],
         '... got the keys expected'
     );
 
     is_deeply(
-        [ sort { $a <=> $b } map 0+$_, enumerable::get_values_for( Foo => 'Gorch' ) ],
+        [ sort { $a <=> $b } map 0+$_, $gorch->get_values ],
         [ 1, 2 ],
         '... got the values expected'
     );
@@ -63,11 +67,12 @@ package Foo::Bar {
 }
 
 subtest '... checking hash version' => sub {
-    can_ok('Foo::Bar', 'BAR');
-    can_ok('Foo::Bar', 'BAZ');
+    my $bar = Foo::Bar->Gorch->BAR;
+    my $baz = Foo::Bar->Gorch->BAZ;
 
-    my $bar = Foo::Bar->BAR;
-    my $baz = Foo::Bar->BAZ;
+    my $gorch = Foo::Bar->Gorch;
+    can_ok($gorch, 'BAR');
+    can_ok($gorch, 'BAZ');
 
     is($bar+0, 10, '... got the expected numeric value for BAR');
     is($bar.'', 'BAR', '... got the expected string value for BAR');

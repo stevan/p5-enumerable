@@ -5,6 +5,10 @@ use strict;
 use warnings;
 
 use Scalar::Util ();
+use Sub::Util    ();
+use MOP          ();
+
+use enumerable::enumeration;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:STEVAN';
@@ -28,25 +32,35 @@ sub import {
 }
 
 sub import_into {
-    my ($class, $caller, $type, @args) = @_;
+    my ($class, $caller, $name, @args) = @_;
 
-    my %enum;
+    my $enum;
     if ( scalar @args == 1 && ref $args[0] eq 'HASH' ) {
-        %enum = %{ $args[0] };
+        $enum = +{ %{ $args[0] } };
     }
     else {
         my $idx = 0;
-        %enum = map { $_ => ++$idx } @args;
+        $enum = +{ map { $_ => ++$idx } @args };
     }
 
-    foreach my $key ( keys %enum ) {
+    my $enumeration = MOP::Class->new( join '::' => __PACKAGE__, $caller, $name );
+    $enumeration->set_superclasses('enumerable::enumeration');
+    $enumeration->add_method( get_name => sub { $name } );
+
+    foreach my $key ( keys %$enum ) {
+        $enum->{ $key } = Scalar::Util::dualvar( $enum->{ $key }, $key );
+        $enumeration->add_method( $key, sub { $enum->{ $key } });
+    }
+
+    bless $enum => $enumeration->name;
+
+    {
         no strict 'refs';
-        $enum{ $key } = Scalar::Util::dualvar( $enum{ $key }, $key );
-        *{$caller.'::'.$key} = sub { $enum{ $key } };
+        *{$caller.'::'.$name} = sub { $enum };
     }
 
     $PACKAGE_TO_ENUM{ $caller } //= {};
-    $PACKAGE_TO_ENUM{ $caller }->{ $type } = \%enum;
+    $PACKAGE_TO_ENUM{ $caller }->{ $name } = $enum;
 }
 
 ## ...
@@ -55,23 +69,8 @@ sub get_enum_for {
     my ($pkg, $type) = @_;
     return unless exists $PACKAGE_TO_ENUM{ $pkg }
                && exists $PACKAGE_TO_ENUM{ $pkg }->{ $type };
-    return $PACKAGE_TO_ENUM{ $pkg }->{ $type }->%*;
+    return $PACKAGE_TO_ENUM{ $pkg }->{ $type };
 }
-
-sub get_value_for {
-    my ($pkg, $type, $name) = @_;
-    my %enum = get_enum_for( $pkg, $type );
-    return $enum{ $name };
-}
-
-sub has_value_for {
-    my ($pkg, $type, $name) = @_;
-    my %enum = get_enum_for( $pkg, $type );
-    return exists $enum{ $name };
-}
-
-sub get_keys_for   { my %enum = get_enum_for( $_[0], $_[1] ); keys   %enum }
-sub get_values_for { my %enum = get_enum_for( $_[0], $_[1] ); values %enum }
 
 1;
 
